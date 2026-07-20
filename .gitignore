@@ -438,3 +438,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- catalog runtime data (generated) ---
+/data/catalog.db
+/data/catalog.db-*
+/data/logs/
+/data/incoming/
+/data/originals/
+/data/derivatives/
+/data/sheets/
+/data/artifacts/
+
+# local sample input photos
+/tmp/
+tmp/
