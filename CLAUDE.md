@@ -161,3 +161,124 @@ This repository is newly initialized. As of the initial commit it contains only 
 There are consequently no build, lint, or test commands to document at this time.
 
 However - leverage the above content for projdct/code conventions.
+
+---
+
+# CLAUDE.md — Addendum
+
+Append to the existing `CLAUDE.md`. Conventions and escalation rules only;
+architecture and decisions live in the main file.
+
+---
+
+## The boundary rule
+
+**`packages/` never imports from `pipelines/`.**
+
+This is the load-bearing rule of the whole repo. `imageops` exists to be
+lifted into unrelated projects. It can only do that while it is
+self-contained: pass it a path and some numbers, get an image back.
+
+It never happens deliberately. It happens because it reads tidier:
+
+```python
+# packages/imageops/core.py
+from pipelines.catalog.config import PROFILES   # <- never
+
+def encode(im, out, profile_name):
+    spec = PROFILES[profile_name]
+```
+
+Fewer arguments, and now `imageops` knows what `"etsy"` means. Your other
+project has no etsy. That one import turns a copy-paste into a rewrite,
+and drags the ledger and schema along behind it.
+
+**The signal:** `packages/` learning a *name* from the domain. Sizes,
+quality integers, and byte ceilings are fine as arguments. A recognized
+string like `"etsy"`, `"pack"`, or `"hero"` is the failure.
+
+Applies to `ledger` and `tagging` too. `tagging` is the one to watch:
+CLIP embedding and palette matching are generic, but the moment it reads
+`themes.yaml` itself rather than being handed themes, it stops
+travelling.
+
+---
+
+## Commits
+
+Conventional commits. First match wins — evaluate top to bottom, stop.
+
+| Question | Type |
+|---|---|
+| Fixes incorrect API/UI behavior? | `fix` |
+| New or changed feature in API/UI? | `feat` |
+| Measurably improves performance? | `perf` |
+| Restructures code, no behavior change? | `refactor` |
+| Formatting/whitespace only? | `style` |
+| Adds or corrects tests? | `test` |
+| Documentation only? | `docs` |
+| Build tools, dependencies, versions? | `build` |
+| Infra, CI/CD, deploy, backups? | `ops` |
+| Anything else | `chore` |
+
+`chore` is the fallback, not the shortcut. If you reach for it, re-read
+the table.
+
+`fix` is scoped to API/UI bugs. A broken CI step is `ops`. A wrong
+dependency pin is `build`. Neither is `fix` — otherwise `fix` becomes
+the same lazy catch-all `chore` is guarded against.
+
+### Scopes
+
+Optional. Use these when applicable:
+
+`imageops` · `ledger` · `tagging` · `catalog` · `ui` · `config`
+
+Never use issue identifiers as scopes.
+
+### Rules
+
+- Imperative present tense: "add", not "added" or "adds"
+- No capital first letter, no trailing period
+- Breaking changes: `!` before the colon — `feat(ledger)!: drop batch_id`
+- Breaking changes get a footer starting `BREAKING CHANGE:`
+- Initial commit is `chore: init`
+- Merge and revert commits keep git's default message format
+
+### Examples
+
+```
+feat(ui): add drag-and-drop grouping for uploaded photos
+fix(imageops): honour EXIF rotation on HEIC input
+refactor(tagging): extract cosine shortlist into its own module
+build: add pillow-heif for iPhone photo support
+ops: add boundary-check subagent for packages/ import rule
+docs: record why display_name is cosmetic only
+chore: init
+```
+
+Schema changes resist the table: `feat(ledger)` when a column enables a
+feature, `refactor(ledger)` when structural, `fix(ledger)` when the old
+schema was wrong. Pick one and move on — not worth a rule.
+
+---
+
+## When to stop and ask
+
+Ask before proceeding if:
+
+- A schema change would drop a column or lose existing rows
+- The work requires contradicting a decision in `CLAUDE.md`
+- A new runtime dependency is needed
+- A change would make `packages/` depend on `pipelines/`
+- Anything under `data/` would be deleted or overwritten
+
+Otherwise: choose, state the assumption in one line, and continue.
+
+**Ambiguous commit types, naming, and file layout are not worth a
+prompt.** Cheap questions devalue expensive ones — if every trivial
+ambiguity triggers a prompt, the prompts get rubber-stamped, and the one
+that mattered goes through with the rest.
+
+The test is cost asymmetry: a mis-typed commit costs an `--amend`, a
+dropped column costs data. Ask about the second kind only.
