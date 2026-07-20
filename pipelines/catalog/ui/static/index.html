@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>catalog — intake</title>
+<style>
+  :root { --line: #e4e4e7; --muted: #71717a; --accent: #2563eb; }
+  * { box-sizing: border-box; }
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 0; color: #18181b; }
+  header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  header h1 { font-size: 1.1rem; margin: 0; }
+  header a { color: var(--accent); text-decoration: none; font-size: .9rem; }
+  main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+  #drop { border: 2px dashed var(--line); border-radius: 10px; padding: 2.5rem; text-align: center; color: var(--muted); cursor: pointer; transition: .15s; }
+  #drop.over { border-color: var(--accent); background: #f5f8ff; color: var(--accent); }
+  .row { display: flex; gap: 1.5rem; margin-top: 1.5rem; align-items: flex-start; }
+  .col { flex: 1; min-width: 0; }
+  h2 { font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 .6rem; }
+  .tray, .group { display: flex; flex-wrap: wrap; gap: .5rem; min-height: 90px; padding: .6rem; border: 1px solid var(--line); border-radius: 8px; background: #fafafa; }
+  .thumb { width: 78px; height: 78px; border-radius: 6px; object-fit: cover; border: 1px solid var(--line); cursor: grab; background: #fff; }
+  .thumb.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .group-wrap { margin-bottom: 1rem; }
+  .group-wrap input { font: inherit; border: 1px solid var(--line); border-radius: 6px; padding: .3rem .5rem; margin-bottom: .4rem; width: 240px; }
+  button { font: inherit; border: 0; border-radius: 7px; padding: .5rem .9rem; cursor: pointer; }
+  .primary { background: var(--accent); color: #fff; }
+  .ghost { background: #f4f4f5; }
+  .bar { display: flex; gap: .6rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+  #out { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 13px; background: #0f172a; color: #cbd5e1; padding: 1rem; border-radius: 8px; margin-top: 1rem; display: none; }
+  .hint { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>catalog · intake</h1>
+  <a href="/runs" target="_blank">/runs →</a>
+</header>
+<main>
+  <div id="drop">Drop iPhone photos here, or click to choose</div>
+  <input id="file" type="file" accept="image/*" multiple hidden>
+
+  <div class="bar">
+    <button class="ghost" id="selectAll">Select all ungrouped</button>
+    <button class="primary" id="newGroup">Group selected → new product</button>
+    <span class="hint">Identity is folder-per-product. Click thumbnails to select, then group.</span>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <h2>Ungrouped</h2>
+      <div id="tray" class="tray"></div>
+    </div>
+    <div class="col">
+      <h2>Products</h2>
+      <div id="groups"></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="primary" id="submit">Ingest all products</button>
+  </div>
+  <pre id="out"></pre>
+</main>
+
+<script>
+const tray = document.getElementById('tray');
+const groupsEl = document.getElementById('groups');
+const out = document.getElementById('out');
+let uploads = [];          // {name, url}
+let selected = new Set();   // names
+let groups = [];            // {display_name, files:[name]}
+
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+drop.onclick = () => fileInput.click();
+['dragover','dragenter'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', ev => sendFiles(ev.dataTransfer.files));
+fileInput.addEventListener('change', () => sendFiles(fileInput.files));
+
+async function sendFiles(fileList) {
+  if (!fileList.length) return;
+  const fd = new FormData();
+  for (const f of fileList) fd.append('files', f);
+  const r = await fetch('/upload', { method: 'POST', body: fd });
+  const data = await r.json();
+  uploads.push(...data.files);
+  render();
+}
+
+function thumb(u) {
+  const img = document.createElement('img');
+  img.className = 'thumb' + (selected.has(u.name) ? ' sel' : '');
+  img.src = u.url; img.title = u.original || u.name; img.draggable = false;
+  img.onclick = () => { selected.has(u.name) ? selected.delete(u.name) : selected.add(u.name); render(); };
+  return img;
+}
+
+function render() {
+  const grouped = new Set(groups.flatMap(g => g.files));
+  tray.innerHTML = '';
+  uploads.filter(u => !grouped.has(u.name)).forEach(u => tray.appendChild(thumb(u)));
+
+  groupsEl.innerHTML = '';
+  groups.forEach((g, i) => {
+    const wrap = document.createElement('div'); wrap.className = 'group-wrap';
+    const name = document.createElement('input');
+    name.value = g.display_name; name.placeholder = 'product name (cosmetic)';
+    name.oninput = () => g.display_name = name.value;
+    const box = document.createElement('div'); box.className = 'group';
+    g.files.forEach(n => { const u = uploads.find(x => x.name === n); if (u) box.appendChild(thumb(u)); });
+    wrap.append(name, box); groupsEl.appendChild(wrap);
+  });
+}
+
+document.getElementById('selectAll').onclick = () => {
+  const grouped = new Set(groups.flatMap(g => g.files));
+  uploads.filter(u => !grouped.has(u.name)).forEach(u => selected.add(u.name));
+  render();
+};
+document.getElementById('newGroup').onclick = () => {
+  if (!selected.size) return;
+  groups.push({ display_name: '', files: [...selected] });
+  selected.clear(); render();
+};
+document.getElementById('submit').onclick = async () => {
+  if (!groups.length) { alert('Create at least one product group first.'); return; }
+  const r = await fetch('/group', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ groups }) });
+  const data = await r.json();
+  out.style.display = 'block';
+  out.textContent = JSON.stringify(data, null, 2);
+};
+</script>
+</body>
+</html>
