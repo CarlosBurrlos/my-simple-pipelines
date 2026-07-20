@@ -1,0 +1,38 @@
+# Derivative profiles (layer 8). Each profile is a plain bag of numbers and
+# format strings handed to imageops.encode/resize. imageops never reads this
+# file or learns these names — the derive stage does the lookup and passes
+# values through.
+#
+# Notes baked into the choices below:
+#   - Etsy does not accept WebP; it gets JPG. WebP is for web/Shopify.
+#   - Transparent pixels render black on Etsy, so everything is flattened to
+#     white upstream in normalize(); nothing here needs to re-state that.
+#   - long_edge is the longest side in px. Never upscales (see imageops.resize).
+
+etsy:
+  long_edge: 2000
+  square: true          # Etsy listings favour square hero shots
+  format: JPEG
+  quality: 90
+  max_bytes: 1000000    # keep under ~1MB per image
+
+web:
+  long_edge: 2048
+  square: false
+  format: WEBP
+  quality: 82
+  max_bytes: 500000
+
+preview:
+  long_edge: 1024
+  square: false
+  format: WEBP
+  quality: 75
+  max_bytes: 200000
+
+thumb:
+  long_edge: 400
+  square: true
+  format: WEBP
+  quality: 70
+  max_bytes: 40000
