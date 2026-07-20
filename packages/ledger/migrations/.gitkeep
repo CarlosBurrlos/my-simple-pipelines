@@ -1,0 +1,2 @@
+# Numbered migrations go here, applied in filename order after the schema.sql
+# baseline. Example: 0001_add_theme_scores.sql
