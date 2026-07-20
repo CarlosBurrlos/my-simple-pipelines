@@ -1,0 +1,38 @@
+# Controlled colour vocabulary — the pruned survivor of vendor/color-names.json.
+# Only names you'd actually put on a listing; RGB is the anchor point palette
+# matching snaps to. Keep this small and opinionated: a huge list produces
+# oddly-specific names ("Baby Fawn") that read worse than a plain one ("tan").
+#
+# Consumed by stages/color.py, which builds a tagging.Palette from it and hands
+# that to the matcher. The tagging package never reads this file.
+
+colors:
+  black:          [16, 16, 16]
+  charcoal:       [54, 57, 62]
+  gray:           [128, 128, 128]
+  silver:         [192, 192, 192]
+  white:          [250, 250, 250]
+  cream:          [255, 253, 240]
+  beige:          [225, 214, 188]
+  tan:            [210, 180, 140]
+  brown:          [120, 80, 50]
+  terracotta:     [200, 110, 75]
+  rust:           [155, 65, 40]
+  red:            [200, 35, 40]
+  maroon:         [110, 30, 40]
+  pink:           [235, 150, 175]
+  blush:          [235, 200, 195]
+  orange:         [230, 130, 45]
+  mustard:        [210, 170, 60]
+  yellow:         [240, 210, 70]
+  olive:          [110, 110, 60]
+  "military green": [95, 105, 70]
+  sage:           [165, 175, 140]
+  green:          [60, 140, 80]
+  forest:         [30, 80, 55]
+  teal:           [40, 130, 130]
+  navy:           [30, 45, 85]
+  blue:           [50, 95, 180]
+  "sky blue":     [140, 190, 225]
+  lavender:       [190, 175, 220]
+  purple:         [110, 70, 150]

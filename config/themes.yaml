@@ -1,0 +1,14 @@
+# Theme scoring is OFF in v1 (see CLAUDE.md §5). CLIP confidence is uncalibrated,
+# so thresholds can't be trusted against real images yet. The model proposes
+# packs from tag sets instead.
+#
+# Populate this later, from concepts you notice missing — each theme a name and
+# a short natural-language description CLIP can embed:
+#
+# themes:
+#   - name: "cozy desk setup"
+#     description: "a warm minimal wooden desk with a mug, notebook, and lamp"
+#   - name: "coastal kitchen"
+#     description: "light blue and white ceramic kitchenware, airy and bright"
+
+themes: []

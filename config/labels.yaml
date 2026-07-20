@@ -1,0 +1,59 @@
+# CLIP zero-shot candidate labels (layer 6, attribute tagging). Stand-in for the
+# Shopify taxonomy: a controlled vocabulary of values per tag key, plus a prompt
+# template CLIP embeds. The attribute stage embeds each rendered prompt once,
+# scores the product's image vector against them, and keeps the argmax per key
+# (above threshold). The tagging package is handed these strings; it never reads
+# this file.
+#
+# CLIP resizes to 224x224 — fine texture and small logos are invisible to it, so
+# keep values coarse: subject, material, and broad style survive; a brand mark
+# does not.
+
+groups:
+  category:
+    template: "a product photo of {}"
+    threshold: 0.20
+    values:
+      - a mug
+      - a ceramic bowl
+      - a plate
+      - a drinking glass
+      - a vase
+      - a notebook
+      - a tote bag
+      - a candle
+      - a lamp
+      - a pillow
+      - a blanket
+      - a piece of jewelry
+      - a wall art print
+      - a plant pot
+      - a wooden cutting board
+
+  material:
+    template: "an object made of {}"
+    threshold: 0.20
+    values:
+      - ceramic
+      - glass
+      - wood
+      - metal
+      - leather
+      - cotton fabric
+      - wool
+      - paper
+      - stone
+      - plastic
+
+  style:
+    template: "a {} style product"
+    threshold: 0.20
+    values:
+      - minimalist
+      - rustic
+      - modern
+      - vintage
+      - bohemian
+      - industrial
+      - coastal
+      - farmhouse
