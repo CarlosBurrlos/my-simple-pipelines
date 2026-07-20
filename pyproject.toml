@@ -1,0 +1,33 @@
+[project]
+name = "my-simple-pipelines"
+version = "0.1.0"
+description = "Monorepo of small pipelines. First: catalog."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "imageops",
+    "ledger",
+    # "tagging",  # added at build-order step 7
+    # "catalog",  # added at build-order step 6
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[tool.uv.workspace]
+members = ["packages/*", "pipelines/*"]
+
+[tool.uv.sources]
+imageops = { workspace = true }
+ledger = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "pipelines"]
+python_files = ["test_*.py"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
